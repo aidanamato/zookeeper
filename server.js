@@ -1,15 +1,21 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+
 const {animals} = require('./data/animals');
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
 
+// parse incoming string or array data
+app.use(express.urlencoded({extend: true}));
+//parse incoming JSON data
+app.use(express.json());
+
 function filterByQuery(query, animalsArr) {
   let personalityTraitsArr = [];
   let filteredResults = animalsArr;
-
-  console.log(filteredResults[0].personalityTraits.indexOf('random value'));
 
   if (query.personalityTraits) {
     // save personality traits as a dedicated array
@@ -50,6 +56,32 @@ function findById(id, animalsArr) {
   return results;
 }
 
+function createNewAnimal(body, animalsArr) {
+  const animal = body;
+  animalsArr.push(animal);
+  fs.writeFileSync(
+    path.join(__dirname, './data/animals.json'),
+    JSON.stringify({animals: animalsArr}, null, 2)
+  );
+  return(animal);
+}
+
+function validateAnimal(animal) {
+  if (!animal.name || typeof animal.name !== 'string') {
+    return false;
+  }
+  if (!animal.species || typeof animal.species !== 'string') {
+    return false;
+  }
+  if (!animal.diet || typeof animal.diet !== 'string') {
+    return false;
+  }
+  if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
+    return false;
+  }
+  return true;
+}
+
 app.get('/api/animals', (req, res) => {
   let results = animals;
   if (req.query) {
@@ -64,6 +96,19 @@ app.get('/api/animals/:id', (req, res) => {
     res.json(results);
   } else {
     res.send(404);
+  }
+});
+
+app.post('/api/animals', (req, res) => {
+  // add id property to req.body
+  req.body.id = animals.length.toString();
+  
+  if (!validateAnimal(req.body)) {
+    res.status(400).send('The animal is not properly formatted.');
+  } else {
+      // add animal to json file and animals array
+    const animal = createNewAnimal(req.body, animals);
+    res.json(animal);
   }
 });
 
