@@ -127,6 +127,16 @@
         "loving"
       ],
       "id": "12"
+    },
+    {
+      "name": "Zuko",
+      "species": "Kitty",
+      "diet": "herbivore",
+      "personalityTraits": [
+        "hungry",
+        "loving"
+      ],
+      "id": "13"
     }
   ]
 }
